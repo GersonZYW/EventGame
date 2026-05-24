@@ -123,13 +123,13 @@ document.addEventListener("keydown", (e) => {
 function startGame() {
   gameStarted = true;
   isGameOver = false;
-  
+
   // Esconde todas as telas para limpar o tabuleiro
   startScreen.style.display = "none";
   gameOverScreen.style.display = "none";
-  
+
   player.style.filter = "none"; // Remove o preto e branco caso estivesse em Game Over
-  
+
   spawnLoop();
 }
 
@@ -152,7 +152,7 @@ restartBtn.addEventListener("click", () => {
   // 3. Reseta os textos da HUD para o valor inicial
   scoreElement.innerText = "Obstáculos: 0";
   distanceElement.innerText = "KM: 0.00";
-  
+
   // Atualiza o recorde visual caso o jogador tenha batido a meta anterior
   record = parseFloat(localStorage.getItem("record")) || 0;
   recordElement.innerText = "Recorde: " + record.toFixed(2) + " KM";
@@ -232,44 +232,64 @@ function spawnLoop() {
 }
 
 // =======================
-// 🏆 RANKING
+// 🏆 RANKING (CORRIGIDO)
 // =======================
+
+// Pega ranking salvo
 function getRanking() {
   return JSON.parse(localStorage.getItem("ranking")) || [];
 }
 
+// Salva ranking
 function saveRanking(ranking) {
   localStorage.setItem("ranking", JSON.stringify(ranking));
 }
 
+// Renderiza na tela
 function renderRanking() {
   const ranking = getRanking();
   rankingDiv.innerHTML = "<h2>TOP 3</h2>";
 
   ranking.forEach((p, i) => {
-    rankingDiv.innerHTML += `<p>${i + 1}º - ${p.name} (${parseFloat(p.score).toFixed(2)} KM)</p>`;
+    rankingDiv.innerHTML += `
+      <p>${i + 1}º - ${p.name} (${Number(p.score).toFixed(2)} KM)</p>
+    `;
   });
 }
 
+// Botão de salvar pontuação
 saveBtn.addEventListener("click", () => {
   const name = nameInput.value.trim() || "Player";
   let ranking = getRanking();
 
-  if (ranking.length === 3 && distance <= parseFloat(ranking.score)) {
+  // 🚨 Verifica se entra no TOP 3
+  if (ranking.length === 3 && distance <= ranking[2].score) {
     alert("Pontuação muito baixa para TOP 3!");
     return;
   }
 
-  ranking = ranking.filter(p => p.name !== name);
-  ranking.push({ name, score: distance });
+  // ✅ Adiciona novo jogador
+  ranking.push({
+    name: name,
+    score: Number(distance)
+  });
+
+  // ✅ Ordena do maior para o menor
   ranking.sort((a, b) => b.score - a.score);
+
+  // ✅ Mantém só os 3 melhores
   ranking = ranking.slice(0, 3);
 
+  // Salva e atualiza tela
   saveRanking(ranking);
   renderRanking();
 
+  // Desativa botão depois de salvar
   saveBtn.disabled = true;
 });
+
+// 🔥 IMPORTANTE: mostra ranking ao carregar o jogo
+renderRanking();
 
 // =======================
 // 🔁 LOOP PRINCIPAL (COLISÃO)
