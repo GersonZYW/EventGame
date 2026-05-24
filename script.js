@@ -8,7 +8,6 @@ let spawnTimeout;
 let score = 0;
 let speed = 2;
 let distance = 0;
-// Alterado: Garante que o recorde inicial seja exibido com duas casas decimais se já existir
 let record = parseFloat(localStorage.getItem("record")) || 0;
 
 // =======================
@@ -49,20 +48,21 @@ recordElement.style.position = "absolute";
 recordElement.style.top = "70px";
 recordElement.style.right = "20px";
 recordElement.style.color = "yellow";
-// Alterado: Mostra o recorde no formato KM
 recordElement.innerText = "Recorde: " + record.toFixed(2) + " KM";
 
 gameBoard.appendChild(scoreElement);
 gameBoard.appendChild(distanceElement);
 gameBoard.appendChild(recordElement);
 
-// =======================
-// 🏃 BACKGROUND BOLHAS (Área Externa da Página)
-// =======================
+// Deixa apenas a tela de início visível no começo de tudo
+startScreen.style.display = "flex";
+gameOverScreen.style.display = "none";
 
+// =======================
+// 🏃 BACKGROUND BOLHAS
+// =======================
 function createBolhas() {
   const bodyContainer = document.body;
-
   if (!bodyContainer) return;
 
   const bubble = document.createElement('span');
@@ -79,11 +79,10 @@ function createBolhas() {
     bubble.remove();
   }, 4000);
 }
-
 setInterval(createBolhas, 100);
 
 // =======================
-// 🏃 ANIMAÇÃO
+// 🏃 ANIMAÇÃO DO PLAYER
 // =======================
 let frame = 0;
 const totalFrames = 16;
@@ -97,18 +96,18 @@ setInterval(() => {
 }, 80);
 
 // =======================
-// 🦘 PULO (Bloqueio de Rolagem Ativado)
+// 🦘 PULO
 // =======================
 document.addEventListener("keydown", (e) => {
   if (e.code === "Space") {
     e.preventDefault();
 
-    if (!gameStarted) {
+    if (!gameStarted && !isGameOver) {
       startGame();
       return;
     }
 
-    if (!player.classList.contains("jump")) {
+    if (!player.classList.contains("jump") && !isGameOver) {
       player.classList.add("jump");
 
       setTimeout(() => {
@@ -123,17 +122,48 @@ document.addEventListener("keydown", (e) => {
 // =======================
 function startGame() {
   gameStarted = true;
+  isGameOver = false;
+  
+  // Esconde todas as telas para limpar o tabuleiro
   startScreen.style.display = "none";
+  gameOverScreen.style.display = "none";
+  
+  player.style.filter = "none"; // Remove o preto e branco caso estivesse em Game Over
+  
   spawnLoop();
 }
 
 startBtn.addEventListener("click", startGame);
 
 // =======================
-// 🔄 RESTART
+// 🔄 RESTART (CORRIGIDO: Sem dar reload na página inteira)
 // =======================
 restartBtn.addEventListener("click", () => {
-  location.reload();
+  // 1. Limpa todos os obstáculos antigos que ficaram travados na tela
+  document.querySelectorAll(".obstacle").forEach(obs => obs.remove());
+
+  // 2. Reseta as variáveis do estado do jogo
+  score = 0;
+  distance = 0;
+  speed = 2;
+  isGameOver = false;
+  gameStarted = false;
+
+  // 3. Reseta os textos da HUD para o valor inicial
+  scoreElement.innerText = "Obstáculos: 0";
+  distanceElement.innerText = "KM: 0.00";
+  
+  // Atualiza o recorde visual caso o jogador tenha batido a meta anterior
+  record = parseFloat(localStorage.getItem("record")) || 0;
+  recordElement.innerText = "Recorde: " + record.toFixed(2) + " KM";
+
+  // 4. Habilita o botão de salvar novamente para a próxima partida
+  saveBtn.disabled = false;
+  nameInput.value = "";
+
+  // 5. Esconde o Game Over e volta para a Tela de Início limpa
+  gameOverScreen.style.display = "none";
+  startScreen.style.display = "flex";
 });
 
 // =======================
@@ -163,20 +193,16 @@ const obstaclesList = [
   "images/passaro.png",
 ];
 
-// =======================
-// 🧱 CRIAR OBSTÁCULO
-// =======================
 function createObstacle() {
-  const obstacle = document.createElement("img");
+  if (!gameStarted || isGameOver) return;
 
+  const obstacle = document.createElement("img");
   const random = Math.floor(Math.random() * obstaclesList.length);
   const type = obstaclesList[random];
 
   obstacle.src = type;
   obstacle.dataset.type = type;
-
   obstacle.classList.add("obstacle");
-
   obstacle.style.position = "absolute";
   obstacle.style.right = "-80px";
   obstacle.style.width = "80px";
@@ -190,7 +216,6 @@ function createObstacle() {
   }
 
   obstacle.style.animation = `rock-animation ${speed}s linear`;
-
   gameBoard.appendChild(obstacle);
 
   setTimeout(() => {
@@ -198,14 +223,10 @@ function createObstacle() {
   }, speed * 1000);
 }
 
-// =======================
-// 🔁 SPAWN
-// =======================
 function spawnLoop() {
   if (!gameStarted || isGameOver) return;
 
   createObstacle();
-
   const tempo = 1000 + Math.random() * 1500;
   spawnTimeout = setTimeout(spawnLoop, tempo);
 }
@@ -223,11 +244,9 @@ function saveRanking(ranking) {
 
 function renderRanking() {
   const ranking = getRanking();
-
   rankingDiv.innerHTML = "<h2>TOP 3</h2>";
 
   ranking.forEach((p, i) => {
-    // Alterado: Exibe a pontuação do ranking formatada com "KM"
     rankingDiv.innerHTML += `<p>${i + 1}º - ${p.name} (${parseFloat(p.score).toFixed(2)} KM)</p>`;
   });
 }
@@ -236,20 +255,14 @@ saveBtn.addEventListener("click", () => {
   const name = nameInput.value.trim() || "Player";
   let ranking = getRanking();
 
-  // Alterado: Validação agora usa parseFloat() para comparar a distância decimal atual com a do ranking
-  if (ranking.length === 3 && distance <= parseFloat(ranking[2].score)) {
+  if (ranking.length === 3 && distance <= parseFloat(ranking.score)) {
     alert("Pontuação muito baixa para TOP 3!");
     return;
   }
 
   ranking = ranking.filter(p => p.name !== name);
-
-  // Alterado: Salva o valor da "distance" atualizada como pontuação do jogador
   ranking.push({ name, score: distance });
-
-  // Ordena do maior KM para o menor KM
   ranking.sort((a, b) => b.score - a.score);
-
   ranking = ranking.slice(0, 3);
 
   saveRanking(ranking);
@@ -259,50 +272,39 @@ saveBtn.addEventListener("click", () => {
 });
 
 // =======================
-// 🔁 LOOP PRINCIPAL
+// 🔁 LOOP PRINCIPAL (COLISÃO)
 // =======================
 setInterval(() => {
   if (!gameStarted || isGameOver) return;
 
   const playerPosition = +window.getComputedStyle(player).bottom.replace('px', '');
   const playerTop = playerPosition + 96;
-
   const obstacles = document.querySelectorAll(".obstacle");
 
   obstacles.forEach((obs) => {
     const obsPosition = obs.offsetLeft;
 
     if (obs.dataset.type.includes("passaro")) {
-      if (
-        obsPosition < 65 &&
-        obsPosition > 0 &&
-        playerTop > 100
-      ) {
+      if (obsPosition < 65 && obsPosition > 0 && playerTop > 100) {
         gameOver();
       }
       return;
     }
 
-    let hitboxX = 70;
-    let hitboxY = 70;
+    let hitboxX = 60;
+    let hitboxY = 65;
 
     if (obs.dataset.type.includes("espinho")) {
       hitboxY = 55;
     }
 
-    if (
-      obsPosition < hitboxX &&
-      obsPosition > 0 &&
-      playerPosition < hitboxY
-    ) {
+    if (obsPosition < hitboxX && obsPosition > 0 && playerPosition < hitboxY) {
       gameOver();
     }
 
-    // O score de obstáculos continua contando para aumentar a velocidade, mas não afeta o recorde
     if (obsPosition < 0 && !obs.passed) {
       score++;
       obs.passed = true;
-
       scoreElement.innerText = "Obstáculos: " + score;
 
       if (score % 3 === 0) {
@@ -317,6 +319,7 @@ setInterval(() => {
 // =======================
 function gameOver() {
   isGameOver = true;
+  clearTimeout(spawnTimeout);
 
   document.querySelectorAll(".obstacle").forEach(o => {
     o.style.animation = "none";
@@ -324,12 +327,9 @@ function gameOver() {
 
   player.style.filter = "grayscale(100%)";
 
-  // Alterado: O recorde global do localStorage passa a ser verificado pela "distance"
   if (distance > record) {
     localStorage.setItem("record", distance);
   }
-
-  clearTimeout(spawnTimeout);
 
   gameOverScreen.style.display = "flex";
   renderRanking();
