@@ -12,13 +12,13 @@
 </head>
 
 <body>
-
+    <h1 class="text-board">Bem-vindo</h1>
     <div class="game-board">
 
         <!-- TELA DE INÍCIO -->
         <div id="start-screen">
-            <h1>Meu Jogo</h1>
-            <button id="start-btn">Iniciar</button>
+            <h1 class="game-title">Samurai Running</h1>
+            <button id="start-btn" class="btn-pixel">START</button>
         </div>
 
         <div id="player"></div>
@@ -26,11 +26,12 @@
         <!-- TELA DE GAME OVER -->
         <div id="game-over">
             <h1>Game Over</h1>
-            <input id="player-name" placeholder="Seu nome" />
-            <button id="save-score">Salvar</button>
-
+            <div class="form-group">
+                <input id="player-name" placeholder="Seu nome" maxlength="8" />
+                <button id="save-score" class="btn-pixel btn-green">Salvar</button>
+            </div>
             <div id="ranking"></div>
-            <button id="restart-btn">Reiniciar</button>
+            <button id="restart-btn" class="btn-pixel btn-red">Reiniciar</button>
         </div>
 
     </div>
