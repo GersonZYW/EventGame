@@ -136,7 +136,7 @@ function startGame() {
 startBtn.addEventListener("click", startGame);
 
 // =======================
-// 🔄 RESTART (CORRIGIDO: Sem dar reload na página inteira)
+// 🔄 RESTART
 // =======================
 restartBtn.addEventListener("click", () => {
   // 1. Limpa todos os obstáculos antigos que ficaram travados na tela
@@ -350,6 +350,10 @@ function gameOver() {
   if (distance > record) {
     localStorage.setItem("record", distance);
   }
+
+  gameOverScreen.style.display = "flex";
+  renderRanking();
+}
 
   gameOverScreen.style.display = "flex";
   renderRanking();
