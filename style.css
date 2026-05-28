@@ -1,4 +1,47 @@
 /* ========================================================
+   🎯 VARIÁVEIS GLOBAIS
+   ======================================================== */
+:root {
+  --color-bg: #06040a;
+  --color-primary: #eab308;
+  --color-green: #22c55e;
+  --color-red: #ef4444;
+
+  --pixel-border:
+    -4px 0 0 0 #000,
+    4px 0 0 0 #000,
+    0 -4px 0 0 #000,
+    0 4px 0 0 #000;
+
+  --font-main: 'Consolas', sans-serif;
+  --font-pixel: 'Press Start 2P', monospace;
+}
+
+/* ========================================================
+   RESET
+   ======================================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-main);
+}
+
+/* ========================================================
+   FUNDO
+   ======================================================== */
+body {
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(at 20% 20%, rgba(30, 9, 82, 0.6), transparent 50%),
+    radial-gradient(at 80% 40%, rgba(0, 50, 130, 0.45), transparent 50%),
+    radial-gradient(at 40% 80%, rgba(75, 0, 130, 0.4), transparent 50%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ========================================================
    TEXTO
    ======================================================== */
 .text-board {
@@ -124,7 +167,6 @@
 
   left: 0;
   bottom: -10px;
-
   background: url('../images/RUN.png') no-repeat;
   image-rendering: pixelated;
 
@@ -176,7 +218,7 @@
 }
 
 /* ========================================================
-   BOTÕES (BASE CORRIGIDA)
+   BOTÕES
    ======================================================== */
 .btn-pixel {
   font-family: var(--font-pixel);
@@ -330,6 +372,10 @@
   }
 
   100% {
+    transform: translateY(-115vh);
+    opacity: 0;
+  }
+}
     transform: translateY(-115vh);
     opacity: 0;
   }
